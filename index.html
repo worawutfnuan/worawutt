@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <title>หาร้านอาหารที่ใกล้คุณ</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <link href="style.css" rel="stylesheet">
+
+    <script>
+      var map;
+      function initMap() {
+        // สร้างแผนที่ พิกัดจุดบางซื่อ
+        var BANGSUE = {lat: 13.8238551, lng: 100.5268434};
+        map = new google.maps.Map(document.getElementById('map'), {
+          center: BANGSUE,
+          zoom: 17
+        });
+
+        var service = new google.maps.places.PlacesService(map);
+        var getNextPage = null;
+        var moreButton = document.getElementById('more');
+        moreButton.onclick = function() {
+          moreButton.disabled = true;
+          if (getNextPage) getNextPage();
+        };
+        
+        // ค้นหาสถานที่ในบริเวณบางซื่อในรัศมี 500 ประเภทสถานที่เป็นร้านอาหาร
+        service.nearbySearch(
+      {location: BANGSUE, radius: 500, type: ['restaurant']},
+      function(results, status, pagination) {
+        if (status !== 'OK') return;
+
+        createMarkers(results);
+        moreButton.disabled = !pagination.hasNextPage;
+        getNextPage = pagination.hasNextPage && function() {
+          pagination.nextPage();
+        };
+      });
+      }
+
+      function createMarkers(places) {
+        var bounds = new google.maps.LatLngBounds();
+        var placesList = document.getElementById('places');
+
+        for (var i = 0, place; place = places[i]; i++) {
+          var image = {
+            url: place,
+          };
+
+          var marker = new google.maps.Marker({
+            map: map,
+            icon: image,
+            title: place.name,
+            position: place.geometry.location
+          });
+
+          var li = document.createElement('li');
+          li.textContent = place.name;
+          placesList.appendChild(li);
+
+          bounds.extend(place.geometry.location);
+        }
+        map.fitBounds(bounds);
+      }
+    </script>
+  </head>
+
+  <body>
+      <section id="top" class="top-section">
+        <div class="container">
+          <div class="row">
+            <div class="col-md-10 col-lg-8 mx-auto text-center">
+            <i class="far fa-paper-plane fa-2x mb-2 text-white"></i>
+            <h2 class="text-white mb-5">ค้นหาร้านอาหารในพื้นที่ที่ต้องการ</h2>
+            <form class="form-inline d-flex">
+            <input type="text" class="form-control flex-fill mr-0 mr-sm-2 mb-3 mb-sm-0" id="inputEmail" placeholder="ใส่พื้นที่ ที่ต้องการ เช่น บางซื่อ ...">
+            <button type="submit" class="btn btn-primary mx-auto">ค้นหา</button>
+            </form>
+            </div>
+          </div>
+        </div>
+      </section>
+
+        <div class="container">
+            <div class="row rowmap">
+                <div class="col-md-8 mb-3 mb-md-0">
+                    <div class="card py-4 h-100">
+                    <div id="map"></div>
+                    </div>
+                </div>
+                    
+                <div class="col-md-4 mb-3 mb-md-0">
+                    <div class="card py-4 h-100">
+                    <div id="right-panel">
+                    <h2 class="text-center">รายการร้านอาหารในพื้นที่</h2>
+                    <ul id="places"></ul>
+                    <button id="more" type="submit" class="btn btn-primary mx-auto">ร้านอาหารเพิ่มเติม</button>
+                    </div>
+                    </div>
+                </div> 
+            </div>   
+        
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDB-tqSaTQG0kij3pO8EhgdI0go3OdgA6g&libraries=places&callback=initMap" async defer></script>
+  </body>
+</html>
